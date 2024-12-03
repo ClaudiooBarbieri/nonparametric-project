@@ -1,19 +1,15 @@
 # load libraries
 library(sf)
-library(ggplot2)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(patchwork)
 library(dplyr) 
 
 ##### 2015 #####
 
 # read data 2015
-lucas_soil_2015 <- read.csv("data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323.csv")
+lucas_soil_2015 <- read.csv("../data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323.csv")
 head(lucas_soil_2015)
 
 # read shape file 2015
-lucas_2015_sf <- st_read("data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp")
+lucas_2015_sf <- st_read("../data/LUCAS2015_topsoildata_20200323/LUCAS_Topsoil_2015_20200323-shapefile/LUCAS_Topsoil_2015_20200323.shp")
 
 colnames(lucas_2015_sf)
 colnames(lucas_soil_2015)
@@ -47,11 +43,11 @@ rm(id, ids, lucas_soil_2015, lucas_2015_sf)
 ##### 2018 #####
 
 # read data 2018
-lucas_soil_2018 <- read.csv("downloaded/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv")
+lucas_soil_2018 <- read.csv("../data/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018.csv")
 head(lucas_soil_2018)
 
 # read shape file 2018
-lucas_2018_sf <- st_read("downloaded/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018 .shp")
+lucas_2018_sf <- st_read("../data/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018 .shp")
 
 # merge them on POINTID
 lucas_2018 <- merge(lucas_2018_sf, lucas_soil_2018, by = "POINTID")
@@ -61,8 +57,8 @@ rm(lucas_2018_sf, lucas_soil_2018)
 
 #### BULK DENSITY ####
 
-bulk_density_full <- read.csv("downloaded/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/BulkDensity_2018_final-2.csv")
-bulk_density_select <- read.csv("downloaded/BD_LUCAS_data_for_paper/BD2018_data_for_paper.csv")
+bulk_density_full <- read.csv("../data/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/BulkDensity_2018_final-2.csv")
+bulk_density_select <- read.csv("../data/BD_LUCAS_data_for_paper/BD2018_data_for_paper.csv")
 bulk_density_select <- bulk_density_select[-1,-c(7,8)]
 bulk_density_select$BDsample_0 <- as.numeric(bulk_density_select$BDsample_0)
 bulk_density_select$coarse_mas <- as.numeric(bulk_density_select$coarse_mas)
@@ -73,11 +69,11 @@ colnames(bulk_density_full)
 colnames(bulk_density_select) # contains bulk density of 0-20cm
 
 # read shape file
-bd_shape <- st_read("downloaded/BD_LUCAS_data_for_paper/BD2018_data_for_paper_shapefile/BD2018_fef_landcover.shp") #all covariates present
+bd_shape <- st_read("../data/BD_LUCAS_data_for_paper/BD2018_data_for_paper_shapefile/BD2018_fef_landcover.shp") #all covariates present
 bulk_density_select <- bd_shape
 
 # read shape file 2018
-lucas_2018_sf <- st_read("downloaded/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018 .shp")
+lucas_2018_sf <- st_read("../data/LUCAS-SOIL-2018-data-report-readme-v2/LUCAS-SOIL-2018-v2/LUCAS-SOIL-2018 .shp")
 colnames(lucas_2018_sf)[1] <- "POINT_ID"
 bulk_density_full <- merge(lucas_2018_sf, bulk_density_full, by = "POINT_ID")
 
@@ -181,7 +177,7 @@ lc_legend <- w_lucas_2015 %>%
   distinct() %>%
   arrange(LC)
   
-write.csv(lc_legend, "datasets/2015/LC_description.csv", row.names = FALSE)
+write.csv(lc_legend, "../datasets/2015/LC_description.csv", row.names = FALSE)
 
 lu_legend <- w_lucas_2015 %>%
   st_drop_geometry() %>%  
@@ -189,15 +185,15 @@ lu_legend <- w_lucas_2015 %>%
   distinct() %>%
   arrange(LU)
 
-write.csv(lu_legend, "datasets/2015/LU_description.csv", row.names = FALSE)
+write.csv(lu_legend, "../datasets/2015/LU_description.csv", row.names = FALSE)
 
 w_lucas_2015$LC0_Desc <- NULL
 w_lucas_2015$LC1_Desc <- NULL
 w_lucas_2015$LU1_Desc <- NULL
 
-st_write(w_lucas_2015, "datasets/2015/shapefile/LUCAS_2015.shp", delete_layer = TRUE)
+st_write(w_lucas_2015, "../datasets/2015/shapefile/LUCAS_2015.shp", delete_layer = TRUE)
 w_lucas_2015$geometry <- NULL
-write.csv(w_lucas_2015, "datasets/2015/LUCAS_2015.csv", row.names = FALSE)
+write.csv(w_lucas_2015, "../datasets/2015/LUCAS_2015.csv", row.names = FALSE)
 rm(w_lucas_2015)
 
 # 2018
@@ -210,7 +206,7 @@ lc_legend <- w_lucas_2018 %>%
   distinct() %>%
   arrange(LC)
 
-write.csv(lc_legend, "datasets/2018/LC_description.csv", row.names = FALSE)
+write.csv(lc_legend, "../datasets/2018/LC_description.csv", row.names = FALSE)
 
 lu_legend <- w_lucas_2018 %>%
   st_drop_geometry() %>%  
@@ -218,15 +214,15 @@ lu_legend <- w_lucas_2018 %>%
   distinct() %>%
   arrange(LU)
 
-write.csv(lu_legend, "datasets/2018/LU_description.csv", row.names = FALSE)
+write.csv(lu_legend, "../datasets/2018/LU_description.csv", row.names = FALSE)
 
 w_lucas_2018$LC0_Desc <- NULL
 w_lucas_2018$LC1_Desc <- NULL
 w_lucas_2018$LU1_Desc <- NULL
 
-st_write(w_lucas_2018, "datasets/2018/shapefile/LUCAS_2018.shp", delete_layer = TRUE)
+st_write(w_lucas_2018, "../datasets/2018/shapefile/LUCAS_2018.shp", delete_layer = TRUE)
 w_lucas_2018$geometry <- NULL
-write.csv(w_lucas_2018, "datasets/2018/LUCAS_2018.csv", row.names = FALSE)
+write.csv(w_lucas_2018, "../datasets/2018/LUCAS_2018.csv", row.names = FALSE)
 rm(w_lucas_2018)
 
 # 2015 BD
@@ -237,9 +233,9 @@ w_lucas_2015_bd$LC0_Desc <- NULL
 w_lucas_2015_bd$LC1_Desc <- NULL
 w_lucas_2015_bd$LU1_Desc <- NULL
 
-st_write(w_lucas_2015_bd, "datasets/2015/shapefile/LUCAS_2015_bd.shp", delete_layer = TRUE)
+st_write(w_lucas_2015_bd, "../datasets/2015/shapefile/LUCAS_2015_bd.shp", delete_layer = TRUE)
 w_lucas_2015_bd$geometry <- NULL
-write.csv(w_lucas_2015_bd, "datasets/2015/LUCAS_2015_bd.csv", row.names = FALSE)
+write.csv(w_lucas_2015_bd, "../datasets/2015/LUCAS_2015_bd.csv", row.names = FALSE)
 rm(w_lucas_2015_bd)
 
 # 2018 BD
@@ -250,9 +246,9 @@ w_lucas_2018_bd$LC0_Desc.x <- NULL
 w_lucas_2018_bd$LC1_Desc <- NULL
 w_lucas_2018_bd$LU1_Desc <- NULL
 
-st_write(w_lucas_2018_bd, "datasets/2018/shapefile/LUCAS_2018_bd.shp", delete_layer = TRUE)
+st_write(w_lucas_2018_bd, "../datasets/2018/shapefile/LUCAS_2018_bd.shp", delete_layer = TRUE)
 w_lucas_2018_bd$geometry <- NULL
-write.csv(w_lucas_2018_bd, "datasets/2018/LUCAS_2018_bd.csv", row.names = FALSE)
+write.csv(w_lucas_2018_bd, "../datasets/2018/LUCAS_2018_bd.csv", row.names = FALSE)
 rm(w_lucas_2018_bd)
 
 # 2015 2018
@@ -268,7 +264,7 @@ lc_legend_15 <- w_lucas_2015_2018 %>%
   distinct() %>%
   arrange(LC_2015)
 
-write.csv(lc_legend_15, "datasets/2015_2018/LC_description_15.csv", row.names = FALSE)
+write.csv(lc_legend_15, "../datasets/2015_2018/LC_description_15.csv", row.names = FALSE)
 
 lu_legend_15 <- w_lucas_2015_2018 %>%
   st_drop_geometry() %>%  
@@ -276,7 +272,7 @@ lu_legend_15 <- w_lucas_2015_2018 %>%
   distinct() %>%
   arrange(LU_2015)
 
-write.csv(lu_legend_15, "datasets/2015_2018/LU_description_15.csv", row.names = FALSE)
+write.csv(lu_legend_15, "../datasets/2015_2018/LU_description_15.csv", row.names = FALSE)
 
 lc_legend_18 <- w_lucas_2015_2018 %>%
   st_drop_geometry() %>% 
@@ -284,7 +280,7 @@ lc_legend_18 <- w_lucas_2015_2018 %>%
   distinct() %>%
   arrange(LC_2018)
 
-write.csv(lc_legend_18, "datasets/2015_2018/LC_description_18.csv", row.names = FALSE)
+write.csv(lc_legend_18, "../datasets/2015_2018/LC_description_18.csv", row.names = FALSE)
 
 lu_legend_18 <- w_lucas_2015_2018 %>%
   st_drop_geometry() %>%  
@@ -292,7 +288,7 @@ lu_legend_18 <- w_lucas_2015_2018 %>%
   distinct() %>%
   arrange(LU_2018)
 
-write.csv(lu_legend_18, "datasets/2015_2018/LU_description_18.csv", row.names = FALSE)
+write.csv(lu_legend_18, "../datasets/2015_2018/LU_description_18.csv", row.names = FALSE)
 
 w_lucas_2015_2018$LC0_Desc_2015 <- NULL
 w_lucas_2015_2018$LC1_Desc_2015 <- NULL
@@ -304,63 +300,7 @@ w_lucas_2015_2018$LU1_Desc_2018 <- NULL
 w_shp_lucas_2015_2018 <- w_lucas_2015_2018[,c(1,2,47)]
 colnames(w_shp_lucas_2015_2018)[1] <- "ID_2015"
 colnames(w_shp_lucas_2015_2018)[2] <- "ID_2018"
-st_write(w_shp_lucas_2015_2018, "datasets/2015_2018/shapefile/LUCAS_2015_2018.shp", delete_layer = TRUE)
+st_write(w_shp_lucas_2015_2018, "../datasets/2015_2018/shapefile/LUCAS_2015_2018.shp", delete_layer = TRUE)
 w_lucas_2015_2018$geometry <- NULL
-write.csv(w_lucas_2015_2018, "datasets/2015_2018/LUCAS_2015_2018.csv", row.names = FALSE)
+write.csv(w_lucas_2015_2018, "../datasets/2015_2018/LUCAS_2015_2018.csv", row.names = FALSE)
 rm(w_lucas_2015_2018)
-
-##### EUROPE #####
-# get the UE map to print
-world <- ne_countries(scale = "medium", returnclass = "sf")
-europe <- world[world$continent == "Europe", ]
-cyprus <- world[world$iso_a2 == "CY", ]
-europe_with_cyprus <- rbind(europe, cyprus)
-lat_range <- c(30, 70)  # latitude from 35°N to 70°N
-lon_range <- c(-10, 35) # longitude from 10°W to 35°E
-bounding_box <- st_as_sfc(st_bbox(c(xmin = lon_range[1], xmax = lon_range[2],
-                                    ymin = lat_range[1], ymax = lat_range[2]), 
-                                    crs = st_crs(europe_with_cyprus)))
-europe_ue <- st_crop(europe_with_cyprus, bounding_box)
-rm(world, europe, cyprus, europe_with_cyprus, bounding_box)
-
-##### PLOTS #####
-# plot 
-ggplot() +
-  geom_sf(data = europe_ue, fill = "lightgray", color = "black") + # Europe map
-  geom_sf(data = lucas_2018, aes(colour = '2018'), size = 0.5, alpha = 0.7) + # LUCAS 2018 points
-  geom_sf(data = lucas_2015, aes(colour = '2015'), size = 0.5, alpha = 0.7) + # LUCAS 2018 points
-  #geom_sf(data = lucas_2018_common, aes(colour = '2015&2018'), size = 0.5, alpha = 0.9) +
-  scale_color_manual(name = "Year", values = c("2018" = "red", "2015" = "green", "2015&2018" = 'purple'), aes(size = 2)) +
-  guides(color = guide_legend(override.aes = list(size = 4))) + # Enlarge legend dots
-  theme_minimal() +
-  labs(title = "LUCAS Soil 2018 Points on Europe Map")
-
-# Plot for 2015 point
-plot_2015 <- ggplot() +
-  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
-  geom_sf(data = lucas_2015, aes(color = "2015"), size = 1, alpha = 0.7) +
-  scale_color_manual(name = "Year", values = c("2018" = "red", "2015" = "green", "2015&2018" = 'purple'), aes(size = 2)) +
-  guides(color = guide_legend(override.aes = list(size = 4))) + # Enlarge legend dots
-  theme_minimal() +
-  labs(title = "LUCAS 2015", color = "Year")
-
-# Plot for 2018 point
-plot_2018 <- ggplot() +
-  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
-  geom_sf(data = lucas_2018, aes(color = "2018"), size = 1, alpha = 0.7) +
-  scale_color_manual(name = "Year", values = c("2018" = "red", "2015" = "green", "2015&2018" = 'purple'), aes(size = 2)) +
-  guides(color = guide_legend(override.aes = list(size = 4))) + # Enlarge legend dots
-  theme_minimal() +
-  labs(title = "LUCAS 2018", color = "Year")
-
-# plot common points
-combined_plot <- ggplot() +
-  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
-  geom_sf(data = lucas_2018_common, aes(color = '2015&2018'), size = 1, alpha = 0.7) +
-  scale_color_manual(name = "Year", values = c("2018" = "red", "2015" = "green", "2015&2018" = 'purple'), aes(size = 2)) +
-  guides(color = guide_legend(override.aes = list(size = 4))) + # Enlarge legend dots
-  theme_minimal() +
-  labs(title = "LUCAS Combined 2015 & 2018", color = "Year")
-
-# Arrange in a three-column layout
-(plot_2015 | plot_2018 | combined_plot)
