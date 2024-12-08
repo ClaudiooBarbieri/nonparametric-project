@@ -26,11 +26,11 @@ data <- subset(data , select = - c(SURVEY_DATE, NUTS_0_2018, NUTS_1_2018, NUTS_2
 
 # detailed cleansing
 
-table(Depth)
-sum(is.na(Depth))
+table(data$Depth)
+sum(is.na(data$Depth))
 # drop row with depth!=0-20 (and also column related to measure at different depth)
 depth <- "0-20 cm"
-data <- data[which(Depth=="0-20 cm"), ]
+data <- data[which(data$Depth=="0-20 cm"), ]
 data <- subset(data , select = - c(Depth, OC..20.30.cm., CaCO3..20.30.cm., BD.0.10, BD.0.20, BD.10.20, BD.20.30))
 
 # convert true type variable
@@ -102,6 +102,9 @@ ggplot() +
   theme_minimal() +
   labs(title = "LUCAS Soil Points on Europe Map")
 
+shp <- subset(data, select = c(POINTID, geometry))
+st_write(shp, "../datasets/shapefile/LUCAS_workon_shape.shp", delete_layer = TRUE)
+data$geometry <- NULL
 write.csv(data, "../datasets/Lucas_workon.csv", row.names = FALSE)
 
 ############################################# MAYBE BETTER ON 2018 ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
