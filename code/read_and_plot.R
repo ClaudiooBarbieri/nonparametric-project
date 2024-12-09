@@ -20,6 +20,8 @@ colSums(!is.na(data))
 
 # save nuts for later eventually 
 NUTS <-  subset(data , select = c(POINTID, NUTS_0_2018, NUTS_1_2018, NUTS_2_2018, NUTS_3_2018))
+NUTS$geometry <- NULL
+write.csv(NUTS, "../datasets/NUTS/NUTS.csv", row.names = FALSE)
 
 #drop surely useless columns
 data <- subset(data , select = - c(SURVEY_DATE, NUTS_0_2018, NUTS_1_2018, NUTS_2_2018, NUTS_3_2018, TH_LAT, TH_LONG))
@@ -78,7 +80,6 @@ colSums(is.na(data))
 # some NA but lets go on with it, consider later
 write.csv(BD_Coarse_estimate, "../datasets/extra/BD_Coarse_estimate.csv", row.names = FALSE)
 write.csv(Coarse_Clay_Sand_Silt, "../datasets/extra/Coarse_Clay_Sand_Silt.csv", row.names = FALSE)
-write.csv(NUTS, "../datasets/extra/NUTS.csv", row.names = FALSE)
 rm(BD_Coarse_estimate,Coarse_Clay_Sand_Silt,NUTS)
 
 ##### EUROPE #####
