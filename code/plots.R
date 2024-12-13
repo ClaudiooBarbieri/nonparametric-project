@@ -116,21 +116,85 @@ rm(my_nuts)
 data_nuts <- NUTS %>%
   st_join(data)
 
-# not complete understood how it works yet
-ggplot(data_nuts) +
-  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
-  geom_sf(aes(fill = pH_H2O), color = "black", size = 0.1) +
-  scale_fill_gradientn(
-    colors = c("yellow", "green", "cyan", "blue"),
-    values = scales::rescale(c(4, 5, 6, 7, 9)),  # Adjust as needed
-    name = "pH"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    legend.position = "right"
-  ) +
-  labs(title = "Average pH (H2O)",
-       subtitle = "Aggregated at NUTS2 Level")
+data_nuts_c <- data_nuts[data_nuts$Landcover=='cropland',]
+data_nuts_w <- data_nuts[data_nuts$Landcover=='woodland',]
+data_nuts_g <- data_nuts[data_nuts$Landcover=='grassland',]
+
+data$BDsample_0
+
+common_fill_scale <- scale_fill_gradientn(
+  colors = c("yellow", "green", "cyan", "blue"),
+  values = scales::rescale(c(5,6,7,8)),
+  name = "pH",
+  na.value = "darkgray"  # Color for missing data
+)
+
+plot_by_nuts <- function(v){
+  
+  aggregated_data <- data_nuts_c %>%
+    group_by(NUTS) %>%                  # Group by NUTS region
+    summarize(avg_pH_H2O = mean(pH_H2O))
+  
+  avg_crop <- ggplot(aggregated_data) +
+    geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+    geom_sf(aes(fill = avg_pH_H2O), color = "black", size = 0.1) +
+    common_fill_scale +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      legend.position = "none"
+    ) +
+    labs(title = "Average pH (H2O) Cropland",
+         subtitle = "Aggregated at NUTS2 Level")
+  
+  aggregated_data <- data_nuts_w %>%
+    group_by(NUTS) %>%                  # Group by NUTS region
+    summarize(avg_pH_H2O = mean(pH_H2O))
+  
+  avg_wood <- ggplot(aggregated_data) +
+    geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+    geom_sf(aes(fill = avg_pH_H2O), color = "black", size = 0.1) +
+    common_fill_scale +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      legend.position = "none"
+    ) +
+    labs(title = "Average pH (H2O) Woodland",
+         subtitle = "Aggregated at NUTS2 Level")
+  
+  aggregated_data <- data_nuts_g %>%
+    group_by(NUTS) %>%                  # Group by NUTS region
+    summarize(avg_pH_H2O = mean(pH_H2O))
+              
+              avg_grass <- ggplot(aggregated_data) +
+                geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+                geom_sf(aes(fill = avg_pH_H2O), color = "black", size = 0.1) +
+                common_fill_scale +
+                theme_minimal() +
+                theme(
+                  panel.grid = element_blank(),
+                  axis.text = element_blank(),
+                  axis.ticks = element_blank(),
+                  legend.position = "right"
+                ) +
+                labs(title = "Average pH (H2O) Grassland",
+                     subtitle = "Aggregated at NUTS2 Level")
+              
+              (avg_crop | avg_wood | avg_grass) + 
+                plot_layout(guides = "collect")
+}
+v <- 'pH_H2O'
+plot_by_nuts(v)
+heat_palette <- colorRampPalette(c("yellow", "red"))
+common_fill_scale <- scale_fill_gradientn(
+  colors = heat_palette(10), #Generate 100 steps for a smooth gradient
+  values = scales::rescale(seq(0, 2, length.out = 100)),  # Rescale for 0-2 range
+  name = "Bulk Density",
+  limits = c(0, 2),  # Define the scale limits
+  na.value = "darkgray"  # Color for missing data
+)
