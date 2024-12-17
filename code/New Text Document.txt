@@ -1,0 +1,5 @@
+https://mgimond.github.io/simple_moransI_example/
+
+https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html#mc
+
+https://mgimond.github.io/Spatial/spatial-autocorrelation.html
