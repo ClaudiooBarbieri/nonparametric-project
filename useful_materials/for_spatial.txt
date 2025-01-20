@@ -35,5 +35,3 @@ Dealing with spatial dependencies in non-parametric models, especially for bulk 
 
 ### 8. **Test for Independence Before Assuming IID**
    - Use statistical tests (e.g., **Mantel test**) to quantify the spatial correlation and understand its impact on your predictions.
-
-Would you like details on any specific approach?

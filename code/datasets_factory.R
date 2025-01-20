@@ -108,7 +108,8 @@ st_write(shp, "../datasets/shapefile/LUCAS_workon_shape.shp", delete_layer = TRU
 data$geometry <- NULL
 write.csv(data, "../datasets/Lucas_workon.csv", row.names = FALSE)
 
-############################################# MAYBE BETTER ON 2018 ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+############################################# 
+#this was a trial, not actually used
 
 covariate <- read.csv("../datasets/2018/LUCAS_2018_bd.csv")
 shapefile <- st_read("../datasets/2018/shapefile/LUCAS_2018_bd.shp")

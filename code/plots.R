@@ -120,7 +120,6 @@ data_nuts_c <- data_nuts[data_nuts$Landcover=='cropland',]
 data_nuts_w <- data_nuts[data_nuts$Landcover=='woodland',]
 data_nuts_g <- data_nuts[data_nuts$Landcover=='grassland',]
 
-data$BDsample_0
 
 common_fill_scale <- scale_fill_gradientn(
   colors = c("yellow", "green", "cyan", "blue"),

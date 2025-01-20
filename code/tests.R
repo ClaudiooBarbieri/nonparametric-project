@@ -31,28 +31,6 @@ unique((LC_legend$LC0_Desc_2018))
 legend <- data.frame(letter = unique(substr(as.character(LC_legend$LC_2018), 1, 1)), description = unique(LC_legend$LC0_Desc_2018))
 rm(LC_legend, LU_legend)
 
-# distance matrix of location
-point_distance <- st_distance(data, data) #Haversine-great circle formula
-
-# difference matrix of bulk density 
-#bd_distance <- as.matrix(dist(data$BDsample_0))
-
-# label distances
-colnames(bd_distance) <- data$POINTID
-colnames(point_distance) <- data$POINTID
-rownames(bd_distance) <- data$POINTID
-rownames(point_distance) <- data$POINTID
-
-# Mantel tests
-#m_test <- mantel(point_distance, bd_distance, permutations = 999) # seems cannot be done for spatial autocorrelation
-# Extract the permutation distribution
-#perm_dist <- m_test$perm
-# Visualize the permutation distribution
-#hist(perm_dist, breaks = 30, main = "Permutation Distribution of Mantel Statistic",
-#    xlab = "Mantel Statistic", col = "lightblue", border = "black", xlim = c(-0.05,0.11))
-#abline(v = m_test$statistic, col = "red", lwd = 2, lty = 2)
-#legend("topright", legend = "Observed Statistic", col = "red", lwd = 2, lty = 2)
-
 # Moran's I
 
 # KNN based 
@@ -96,8 +74,6 @@ abline(v=moran_result$statistic, col = 'red', lwd = 2)
 moran_result
 morans_scatter <- moran.plot(data$BDsample_0, listw = listw, zero.policy = TRUE, main = "Moran's I Scatter Plot")
 
-#moran_result_np <- moranNP.randtest(data$BDsample_0, listw = listw, zero.policy = TRUE, alter = 'two-sided', nsim = 9999)
-#moran_result_np
 
 different_lag <- function(data, dist){
   dnn <- dnearneigh(data, 0, dist)
@@ -121,6 +97,7 @@ different_lag <- function(data, dist){
   moran_result <- moran.mc(data$BDsample_0, listw = listw, zero.policy = TRUE, alternative = 'two.sided', nsim = 999)
   moran_result
 }
+
 different_lag(data, 50)
 different_lag(data, 100)
 different_lag(data, 150)
@@ -128,11 +105,8 @@ different_lag(data, 200)
 different_lag(data, 250)
 different_lag(data, 500)
 different_lag(data, 1000)
-# in the future can try with all covariate too
-#moran.randtest(datab[,c(4,5,6,7,8,9,10,11,12,13,14)], listw = listw, zero.policy = TRUE, alternative = 'two.sided', nsim = 999)
 
-# result of the permutation test
-
+# local Moran's I analysis
 
 local_moran <- localmoran_perm(data$BDsample_0, listw = listw, zero.policy = TRUE, nsim = 9999)
 local_moran
@@ -141,7 +115,7 @@ data$significant <- local_moran[,5] < 0.05
 data$p_value <- local_moran[, 5] 
 
 
-# local moron pval
+# local moran pval
 local_moran_pval <- ggplot(data = data) +
   geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
   geom_sf(aes(color = significant), size = 2) +
@@ -153,7 +127,7 @@ local_moran_pval <- ggplot(data = data) +
   theme_minimal() +
   labs(title = "Significant Clusters (p < 0.05)")
 
-#local moron val
+#local moran val
 local_moran_val <- ggplot(data) +
   geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
   geom_sf(aes(color = localmoran), size = 3) +  # Use Moran's I values
@@ -192,6 +166,7 @@ local_moran_clust <- ggplot(data) +
 
 (local_moran_pval | local_moran_clust)
 
+# should go on from here
 
 # Perform Geary's C
 geary_result <- geary.mc(data$BDsample_0, listw = nb, zero.policy = TRUE,  nsim=9999)
@@ -211,7 +186,3 @@ ggplot(data) +
   theme_minimal() +
   ggtitle("Geary's C Local Spatial Autocorrelation") +
   theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
-
-
-
-local_moran$quadr
