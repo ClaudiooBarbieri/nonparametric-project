@@ -128,7 +128,7 @@ coords <- st_coordinates(data)
 dist_mat <- gw.dist(coords, coords, focus=0, p=2, theta=0, longlat=T)
 bw_opt <- bw.gwr(BDsample_0~OC_2018_reg+pH_H2O_reg+K_2018_reg+EC_2018_reg+Elev_reg+N_2018_reg, data, approach="CV", kernel="gaussian",
                  adaptive=FALSE, p=2, theta=0, dMat=dist_mat, longlat=F)
-
+#bw_opt <- 300
 model_sel <- gwr.model.selection("BDsample_0",InDeVars=c("Elev_reg", "pH_H2O_reg", "EC_2018_reg", "OC_2018_reg", "N_2018_reg", "K_2018_reg", "LC_0"), data, bw=bw_opt,approach="CV",
                     adaptive=F,kernel="gaussian", dMat = dist_mat, p=2, theta=0, longlat=F,
                     parallel.method=F,parallel.arg=NULL)
@@ -149,9 +149,9 @@ lm_mod <- lm(BDsample_0~Elev+pH_H2O+EC_2018+OC_2018+N_2018+K_2018+LC_0, data = d
 #GAM
 lm_mod2 <- lm(BDsample_0~Elev_reg+pH_H2O_reg+EC_2018_reg+OC_2018_reg+N_2018_reg+K_2018_reg+LC_0, data = data)
 
-semi_mod <- gwr.mixed(BDsample_0~Elev_reg+pH_H2O_reg, data, coords, fixed.vars=c("LC_0"),
-          intercept.fixed=FALSE, bw_opt, diagnostic=T, kernel="gaussian",
-          adaptive=FALSE, p=2, theta=0, longlat=F,dMat=dist_mat, dMat.rp=dist_mat)
+#semi_mod <- gwr.mixed(BDsample_0~Elev_reg+pH_H2O_reg, data, coords, fixed.vars=c("LC_0"),
+#          intercept.fixed=FALSE, bw_opt, diagnostic=T, kernel="gaussian",
+#          adaptive=FALSE, p=2, theta=0, longlat=F,dMat=dist_mat, dMat.rp=dist_mat)
 
 plot_values <- ggplot() +
   geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
