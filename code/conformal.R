@@ -115,54 +115,6 @@ set_pred_names <- function(data_fun){
   return (data_fun)
 }
 
-# function that performs non exchangeable split conformal prediction
-nexSCP <- function(data, data_predict, alpha = 0.1, calib_percentage = 0.5, bw = 300) {
-  
-  n <- nrow(data)
-  tags <- st_coordinates(data)
-  dmat <- gw.dist(tags, focus=0, p=2, theta=0, longlat=T)
-  
-  calib_indeces <- sample(1:n, size = round(n * calib_percentage))
-  
-  data_train <- data[-calib_indeces,]
-  data_calib <- set_pred_names(data[calib_indeces,])
-
-  dist_mat_train <- gw.dist(st_coordinates(data_train), focus=0, p=2, theta=0, longlat=T)
-  dist_mat_train_calib <- gw.dist(st_coordinates(data_train), st_coordinates(data_calib), focus=0, p=2, theta=0, longlat=T)
-  
-  fit_calib <- gwr.predict(BDsample_0~OC_2018_reg+LC_0+Elev_reg+K_2018_reg+N_2018_reg+pH_H2O_reg+EC_2018_reg, data_train, data_calib, bw=bw, kernel="gaussian",adaptive=FALSE, p=2,
-                           theta=0, longlat=F, dMat1=t(dist_mat_train_calib), dMat2=dist_mat_train)
-  
-  data_predict <- set_pred_names(data_predict)
-  
-  dist_mat_train_predict <- gw.dist(st_coordinates(data_train), st_coordinates(data_predict), focus=0, p=2, theta=0, longlat=T)
-  
-  fit_predict <- gwr.predict(BDsample_0~OC_2018_reg+LC_0+Elev_reg+K_2018_reg+N_2018_reg+pH_H2O_reg+EC_2018_reg, data_train, data_predict, bw=bw, kernel="gaussian",adaptive=FALSE, p=2,
-                             theta=0, longlat=F, dMat1=t(dist_mat_train_predict), dMat2=dist_mat_train)
-  calib_thresh <- c()
-  for(i in 1:nrow(data_predict)){
-    weights_calib <- compute_gaussian_weights(rbind(tags[calib_indeces,],st_coordinates(data_predict[i,])),bw=1000)
-  
-    if (sum(weights_calib) >= 1 - alpha) {
-      R <- abs(fit_calib$SDF$prediction-data_calib$BDsample_0)
-      ord_R <- order(R)
-      ind_thresh <- min(which(cumsum(weights_calib[ord_R]) >= 1 - alpha))
-      calib_thresh[i] <- sort(R)[ind_thresh]
-    } else {
-      calib_thresh[i] <- Inf
-    }
-    
-  }
-  
-  y_PI_df <- data.frame(
-    lower = fit_predict$SDF$prediction - calib_thresh,
-    prediction = fit_predict$SDF$prediction,
-    upper = fit_predict$SDF$prediction + calib_thresh
-  )
-  
-  return(y_PI_df)
-}
-
 #import data to predict
 data_predict <- st_read("../datasets/2018/shapefile/LUCAS_2018.shp")
 
@@ -183,7 +135,7 @@ data_predict$EC_2018 <- as.numeric(data_predict$EC)
 data_predict$N_2018 <- as.numeric(data_predict$N)
 data_predict$K_2018 <- as.numeric(data_predict$K)
 
-#mtch names
+#match names
 data_predict <- data_predict %>% select("Elev","OC_2018","N_2018","K_2018","EC_2018","pH_H2O","LC_0")
 
 
@@ -201,7 +153,7 @@ data_predict$OC_2018_reg <- bs(data_predict$OC_2018, degree=3)
 data_predict$N_2018_reg <- bs(data_predict$N_2018, degree=3)
 data_predict$K_2018_reg <- bs(log(data_predict$K_2018), degree=2)
 
-result <- nexSCP(data = data,data_predict = data_predict)
+#performs non exchangeable split conformal prediction
 
 n <- nrow(data)
 calib_percentage <- 0.5
@@ -227,28 +179,130 @@ dist_mat_train_predict <- gw.dist(st_coordinates(data_train), st_coordinates(dat
 
 fit_predict <- gwr.predict(BDsample_0~OC_2018_reg+LC_0+Elev_reg+K_2018_reg+N_2018_reg+pH_H2O_reg+EC_2018_reg, data_train, data_predict, bw=bw, kernel="gaussian",adaptive=FALSE, p=2,
                            theta=0, longlat=F, dMat1=t(dist_mat_train_predict), dMat2=dist_mat_train)
-calib_thresh <- c()
-for(i in 1:nrow(data_predict)){
-  weights_calib <- compute_gaussian_weights(rbind(tags[calib_indeces,],st_coordinates(data_predict[i,])),bw=300)
+
+library(foreach)
+library(doParallel)
+
+
+num_cores <- detectCores() - 1
+
+
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+calib_thresh <- numeric(nrow(data_predict))
+
+# compute threshold
+calib_thresh <- foreach(i = 1:nrow(data_predict), .combine = "c", .packages = c("sf","GWmodel")) %dopar% {
+  weights_calib <- compute_gaussian_weights(rbind(tags[calib_indeces,], st_coordinates(data_predict[i,])), bw = 100)
   
   if (sum(weights_calib) >= 1 - alpha) {
-    R <- abs(fit_calib$SDF$prediction-data_calib$BDsample_0)
+    R <- abs(fit_calib$SDF$prediction - data_calib$BDsample_0)
     ord_R <- order(R)
     ind_thresh <- min(which(cumsum(weights_calib[ord_R]) >= 1 - alpha))
-    calib_thresh[i] <- sort(R)[ind_thresh]
+    sort(R)[ind_thresh]
   } else {
-    calib_thresh[i] <- Inf
+    Inf
   }
-  
 }
 
+stopCluster(cl)
+
+#build dataframe with values
 y_PI_df <- data.frame(
   lower = fit_predict$SDF$prediction - calib_thresh,
   prediction = fit_predict$SDF$prediction,
   upper = fit_predict$SDF$prediction + calib_thresh
 )
 
+y_PI_df$lower <- pmax(0, y_PI_df$lower)
+y_PI_df$upper <- pmax(0, y_PI_df$upper)
+
+y_PI_df$width <- y_PI_df$upper - y_PI_df$lower
+data_predicted <- bind_cols(data_predict,y_PI_df)
+
+# forget about outlier
+data_predicted <- data_predicted[-which(data_predict$Elev > 4000),]
+
+# plot
+plot_width <- ggplot() +
+  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+  geom_sf(data = data_predicted, aes(color = width), size = 1.5) +  
+  scale_color_viridis_c(option = "turbo") +  
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "right"
+  ) +
+  labs(
+    title = "Conformal Prediction interval width",
+    color = "Value Legend"  
+  )
+plot_width
+
+#idea of permormance
+hist(y_PI_df$width)
+mean(y_PI_df$width, na.rm=T)
+var(y_PI_df$width, na.rm=T)
+sd(y_PI_df$width, na.rm=T)
 
 
+common_limits <- c(0,2) #plausible value
 
+plot_upper <- ggplot() +
+  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+  geom_sf(data = data_predicted, aes(color = upper), size = 1.5) +  # Replace `value_column` with your column name
+  scale_color_viridis_c(option = "plasma", limits=common_limits) +  # Use a Viridis color scale, change `option` if needed
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "right"
+  ) +
+  labs(
+    title = "Upper Bound",
+    color = "Value Legend"  # Adjust legend title
+  )
 
+plot_lower <- ggplot() +
+  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+  geom_sf(data = data_predicted, aes(color = lower), size = 1.5) +  # Replace `value_column` with your column name
+  scale_color_viridis_c(option = "plasma", limits=common_limits) +  # Use a Viridis color scale, change `option` if needed
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "right"
+  ) +
+  labs(
+    title = "Lower Bound",
+    color = "Value Legend"  
+  )
+(plot_upper|plot_lower)
+
+# prediction on unobserved
+dist_mat_train_prediction <- gw.dist(st_coordinates(data), st_coordinates(data_predict), focus=0, p=2, theta=0, longlat=T)
+
+fit_prediction <- gwr.predict(BDsample_0~OC_2018_reg+LC_0+Elev_reg+K_2018_reg+N_2018_reg+pH_H2O_reg+EC_2018_reg, data, data_predict, bw=bw, kernel="gaussian",adaptive=FALSE, p=2,
+                           theta=0, longlat=F, dMat1=t(dist_mat_train_prediction), dMat2=dmat)
+
+plot_hat <- ggplot() +
+  geom_sf(data = europe_ue, fill = "lightgray", color = "black") +
+  geom_sf(data = data_hat, aes(color = prediction), size = 1.5) +  # Replace `value_column` with your column name
+  scale_color_viridis_c(option = "plasma", limits = common_limits) +  # Use a Viridis color scale, change `option` if needed
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "right"
+  ) +
+  labs(
+    title = "Predicted Values",
+    color = "Value Legend"  # Adjust legend title
+  )
+plot_hat
